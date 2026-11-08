@@ -1,0 +1,467 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cenkalti/king-server/schema/king.schema.json",
+  "$defs": {
+    "Card": {
+      "properties": {
+        "rank": {
+          "type": "integer",
+          "maximum": 14,
+          "minimum": 2
+        },
+        "suit": {
+          "$ref": "#/$defs/Suit"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "rank",
+        "suit"
+      ],
+      "title": "Card",
+      "description": "Card is a playing card."
+    },
+    "Contract": {
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "no_tricks",
+            "no_hearts",
+            "no_queens",
+            "no_kings_jacks",
+            "no_last_two",
+            "no_king_of_hearts",
+            "trump"
+          ]
+        },
+        "suit": {
+          "$ref": "#/$defs/Suit",
+          "description": "Trump suit. Present only when kind is trump."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "title": "Contract"
+    },
+    "Error": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "message"
+      ],
+      "title": "Error",
+      "description": "Error reports a rejected Hello or a protocol error."
+    },
+    "HandResult": {
+      "properties": {
+        "hand_number": {
+          "type": "integer"
+        },
+        "declarer": {
+          "type": "integer"
+        },
+        "contract": {
+          "$ref": "#/$defs/Contract"
+        },
+        "scores": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array",
+          "maxItems": 4,
+          "minItems": 4
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "hand_number",
+        "declarer",
+        "contract",
+        "scores"
+      ],
+      "title": "HandResult",
+      "description": "HandResult summarizes a finished hand."
+    },
+    "Hello": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hello"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 32,
+          "minLength": 1,
+          "description": "Name identifies the bot for the whole match. Reconnect with the same name."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "name"
+      ],
+      "title": "Hello",
+      "description": "Hello is the first message a bot sends after connecting."
+    },
+    "MatchEnd": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "match_end"
+          ]
+        },
+        "standings": {
+          "items": {
+            "$ref": "#/$defs/Standing"
+          },
+          "type": "array"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "standings"
+      ],
+      "title": "MatchEnd",
+      "description": "MatchEnd is sent to every bot when the match is over."
+    },
+    "Quota": {
+      "properties": {
+        "trump": {
+          "type": "integer"
+        },
+        "negative": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "trump",
+        "negative"
+      ],
+      "title": "Quota",
+      "description": "Quota is how many declarations of each type a seat has left."
+    },
+    "Request": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "request"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "integer"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "choose_contract",
+            "play_card"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/State"
+        },
+        "legal_cards": {
+          "items": {
+            "$ref": "#/$defs/Card"
+          },
+          "type": "array",
+          "description": "LegalCards is set for play_card."
+        },
+        "legal_contracts": {
+          "items": {
+            "$ref": "#/$defs/Contract"
+          },
+          "type": "array",
+          "description": "LegalContracts is set for choose_contract."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "id",
+        "game_id",
+        "kind",
+        "state"
+      ],
+      "title": "Request",
+      "description": "Request asks the bot for one decision."
+    },
+    "Response": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "response"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "card": {
+          "$ref": "#/$defs/Card"
+        },
+        "contract": {
+          "$ref": "#/$defs/Contract"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "id"
+      ],
+      "title": "Response",
+      "description": "Response answers the Request with the same ID."
+    },
+    "Standing": {
+      "properties": {
+        "rank": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "placement_points": {
+          "type": "number"
+        },
+        "total_points": {
+          "type": "integer"
+        },
+        "games_won": {
+          "type": "number"
+        },
+        "strikes": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "rank",
+        "name",
+        "placement_points",
+        "total_points",
+        "games_won",
+        "strikes"
+      ],
+      "title": "Standing",
+      "description": "Standing is one bot's line in the final standings."
+    },
+    "State": {
+      "properties": {
+        "game_id": {
+          "type": "integer"
+        },
+        "seat": {
+          "type": "integer",
+          "maximum": 3,
+          "minimum": 0,
+          "description": "Seat is your seat, 0..3. Play is counter-clockwise: after seat s comes (s+1)%4."
+        },
+        "players": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "maxItems": 4,
+          "minItems": 4,
+          "description": "Players are the bot names by seat."
+        },
+        "hand_number": {
+          "type": "integer",
+          "maximum": 20,
+          "minimum": 1,
+          "description": "HandNumber is 1..20."
+        },
+        "declarer": {
+          "type": "integer",
+          "maximum": 3,
+          "minimum": 0
+        },
+        "contract": {
+          "$ref": "#/$defs/Contract",
+          "description": "Contract is the current hand's contract; absent while it is being chosen."
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/Card"
+          },
+          "type": "array",
+          "description": "Cards are the cards you hold now."
+        },
+        "tricks": {
+          "items": {
+            "$ref": "#/$defs/Trick"
+          },
+          "type": "array",
+          "description": "Tricks are the completed tricks of the current hand."
+        },
+        "current_trick": {
+          "$ref": "#/$defs/Trick",
+          "description": "CurrentTrick is the trick in progress (winner is -1)."
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/HandResult"
+          },
+          "type": "array",
+          "description": "History is the result of every earlier hand in this game."
+        },
+        "totals": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array",
+          "maxItems": 4,
+          "minItems": 4,
+          "description": "Totals are the game scores by seat, before the current hand."
+        },
+        "negative_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object",
+          "description": "NegativeCounts is how many times each negative contract has been\ndeclared in this game, keyed by contract kind."
+        },
+        "quotas": {
+          "items": {
+            "$ref": "#/$defs/Quota"
+          },
+          "type": "array",
+          "maxItems": 4,
+          "minItems": 4,
+          "description": "Quotas are the declarations each seat has left, by seat."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "game_id",
+        "seat",
+        "players",
+        "hand_number",
+        "declarer",
+        "cards",
+        "tricks",
+        "current_trick",
+        "history",
+        "totals",
+        "negative_counts",
+        "quotas"
+      ],
+      "title": "State",
+      "description": "State is everything one seat is allowed to know when asked for a decision."
+    },
+    "Suit": {
+      "type": "string",
+      "enum": [
+        "C",
+        "D",
+        "H",
+        "S"
+      ],
+      "title": "Suit",
+      "description": "Clubs, Diamonds, Hearts, Spades."
+    },
+    "Trick": {
+      "properties": {
+        "leader": {
+          "type": "integer"
+        },
+        "cards": {
+          "items": {
+            "$ref": "#/$defs/Card"
+          },
+          "type": "array"
+        },
+        "winner": {
+          "type": "integer",
+          "description": "Winner is the seat that won the trick, or -1 while it is incomplete."
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "leader",
+        "cards",
+        "winner"
+      ],
+      "title": "Trick",
+      "description": "Trick is one round of up to four cards."
+    },
+    "Welcome": {
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "welcome"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "type",
+        "name"
+      ],
+      "title": "Welcome",
+      "description": "Welcome confirms a Hello."
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Hello"
+    },
+    {
+      "$ref": "#/$defs/Welcome"
+    },
+    {
+      "$ref": "#/$defs/Error"
+    },
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/MatchEnd"
+    }
+  ],
+  "title": "King bot protocol",
+  "description": "Every WebSocket message between the King server and a bot. See PROTOCOL.md."
+}
