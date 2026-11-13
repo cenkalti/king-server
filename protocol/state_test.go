@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/cenkalti/king-server/king"
@@ -86,4 +87,29 @@ func TestSnapshotHistoryAndQuotas(t *testing.T) {
 	if sum != -320 {
 		t.Fatalf("totals %v", st.Totals)
 	}
+}
+
+// Arrays are always JSON arrays, never null, in every snapshot (the schema
+// requires arrays). The first trick of a hand used to send "tricks": null.
+func TestSnapshotArraysNeverNull(t *testing.T) {
+	g := king.NewGame(king.Deals(3))
+	check := func() {
+		for seat := range 4 {
+			b, _ := json.Marshal(Snapshot(g, 0, seat, players))
+			for _, f := range []string{`"tricks":null`, `"cards":null`, `"history":null`} {
+				if strings.Contains(string(b), f) {
+					t.Fatalf("hand %d seat %d: %s in %s", g.HandNumber(), seat, f, b)
+				}
+			}
+		}
+	}
+	for !g.Done() {
+		check()
+		if g.Phase() == king.Choosing {
+			g.Choose(g.Turn(), g.LegalContracts(g.Turn())[0])
+		} else {
+			g.Play(g.Turn(), g.Legal(g.Turn())[0])
+		}
+	}
+	check()
 }

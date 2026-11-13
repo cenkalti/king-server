@@ -66,7 +66,9 @@ func Snapshot(g *king.Game, gameID, seat int, players [4]string) State {
 	if h := g.Hand(); h != nil {
 		c := h.Contract()
 		st.Contract = &c
-		st.Tricks = h.Tricks()
+		if t := h.Tricks(); t != nil {
+			st.Tricks = t
+		}
 		st.CurrentTrick = h.Current()
 		if st.CurrentTrick.Cards == nil {
 			st.CurrentTrick.Cards = []king.Card{}
